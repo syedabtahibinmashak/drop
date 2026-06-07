@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 
@@ -30,6 +31,10 @@ public class Main implements ApplicationListener {
 
     Vector2 touchPosition;
 
+    Array<Sprite> dropSprites;
+
+    float dropTimer;
+
     @Override
     public void create() {
         // Prepare your application here.
@@ -46,6 +51,9 @@ public class Main implements ApplicationListener {
         bucketSprite.setSize(1, 1);
 
         touchPosition = new Vector2();
+
+        dropSprites = new Array<>();
+
     }
 
     @Override
@@ -62,7 +70,7 @@ public class Main implements ApplicationListener {
     private void input()
     {
         float delta = Gdx.graphics.getDeltaTime();
-        float speed = delta * 4.25f;
+        float speed = delta * 5f;
 
         if(Gdx.input.isKeyPressed(Input.Keys.RIGHT))
         {
@@ -90,6 +98,43 @@ public class Main implements ApplicationListener {
         float bucketHeight = bucketSprite.getHeight();
 
         bucketSprite.setX(MathUtils.clamp(bucketSprite.getX(), 0, worldWidth - bucketWidth));
+
+        float delta = Gdx.graphics.getDeltaTime();
+
+        dropTimer += delta;
+        if(dropTimer >= 1f)
+        {
+            dropTimer = 0;
+            createDroplet();
+        }
+
+        for(int i = dropSprites.size - 1; i >= 0; i--)
+        {
+            Sprite dropSprite = dropSprites.get(i);
+            float dropWidth = dropSprite.getWidth();
+            float dropHeight = dropSprite.getHeight();
+
+            dropSprite.translateY(-3f * delta);
+
+            if(dropSprite.getY() < - dropHeight) dropSprites.removeIndex(i);
+        }
+    }
+
+    private void createDroplet()
+    {
+        float worldWidth = viewport.getWorldWidth();
+        float worldHeight = viewport.getWorldHeight();
+
+        float dropWidth = 1;
+        float dropHeight = 1;
+
+        Sprite dropSprite = new Sprite(dropTexture);
+        dropSprite.setSize(dropWidth, dropHeight);
+
+        dropSprite.setX(MathUtils.random(0f, worldWidth - dropWidth));
+        dropSprite.setY(worldHeight);
+
+        dropSprites.add(dropSprite);
     }
 
     private void draw()
@@ -105,6 +150,11 @@ public class Main implements ApplicationListener {
 
         spriteBatch.draw(backgroundTexture, 0, 0, worldWidth, worldHeight);
         bucketSprite.draw(spriteBatch);
+
+        for(Sprite dropSprite : dropSprites)
+        {
+            dropSprite.draw(spriteBatch);
+        }
 
         spriteBatch.end();
     }
