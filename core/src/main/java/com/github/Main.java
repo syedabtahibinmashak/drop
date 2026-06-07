@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
@@ -35,6 +36,9 @@ public class Main implements ApplicationListener {
 
     float dropTimer;
 
+    Rectangle bucketRectangle;
+    Rectangle dropRectangle;
+
     @Override
     public void create() {
         // Prepare your application here.
@@ -54,6 +58,12 @@ public class Main implements ApplicationListener {
 
         dropSprites = new Array<>();
 
+        bucketRectangle = new Rectangle();
+        dropRectangle = new Rectangle();
+
+        music.setLooping(true);
+        music.setVolume(0.25f);
+        music.play();
     }
 
     @Override
@@ -98,6 +108,7 @@ public class Main implements ApplicationListener {
         float bucketHeight = bucketSprite.getHeight();
 
         bucketSprite.setX(MathUtils.clamp(bucketSprite.getX(), 0, worldWidth - bucketWidth));
+        bucketRectangle.set(bucketSprite.getX(), bucketSprite.getY(), bucketWidth, bucketHeight);
 
         float delta = Gdx.graphics.getDeltaTime();
 
@@ -115,8 +126,15 @@ public class Main implements ApplicationListener {
             float dropHeight = dropSprite.getHeight();
 
             dropSprite.translateY(-3f * delta);
+            dropRectangle.set(dropSprite.getX(), dropSprite.getY(), dropWidth, dropHeight);
 
             if(dropSprite.getY() < - dropHeight) dropSprites.removeIndex(i);
+
+            if(bucketRectangle.overlaps(dropRectangle))
+            {
+                dropSprites.removeIndex(i);
+                dropSound.play();
+            }
         }
     }
 
