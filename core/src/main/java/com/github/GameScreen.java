@@ -1,32 +1,28 @@
 package com.github;
 
-import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
-import com.badlogic.gdx.utils.viewport.FitViewport;
 
-/** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
-public class Main implements ApplicationListener {
+public class GameScreen implements Screen {
+
+    final Drop game;
 
     Texture backgroundTexture;
     Texture bucketTexture;
     Texture dropTexture;
     Sound dropSound;
     Music music;
-
-    SpriteBatch spriteBatch;
-    FitViewport viewport;
 
     Sprite bucketSprite;
 
@@ -39,17 +35,20 @@ public class Main implements ApplicationListener {
     Rectangle bucketRectangle;
     Rectangle dropRectangle;
 
-    @Override
-    public void create() {
-        // Prepare your application here.
+    int dropsGathered;
+
+    public GameScreen(Drop game) {
+
+        this.game = game;
+
+        // load the game assets
         backgroundTexture = new Texture("background.png");
         bucketTexture = new Texture("bucket.png");
         dropTexture = new Texture("drop.png");
         dropSound = Gdx.audio.newSound(Gdx.files.internal("drop.mp3"));
         music = Gdx.audio.newMusic(Gdx.files.internal("music.mp3"));
-
-        spriteBatch = new SpriteBatch();
-        viewport = new FitViewport(8, 5);
+        music.setLooping(true);
+        music.setVolume(0.25f);
 
         bucketSprite = new Sprite(bucketTexture);
         bucketSprite.setSize(1, 1);
@@ -60,21 +59,13 @@ public class Main implements ApplicationListener {
 
         bucketRectangle = new Rectangle();
         dropRectangle = new Rectangle();
-
-        music.setLooping(true);
-        music.setVolume(0.25f);
-        music.play();
     }
 
+
     @Override
-    public void resize(int width, int height) {
-        // If the window is minimized on a desktop (LWJGL3) platform, width and height are 0, which causes problems.
-        // In that case, we don't resize anything, and wait for the window to be a normal size before updating.
-        if(width <= 0 || height <= 0) return;
-
-        // Resize your application here. The parameters represent the new window size.
-
-        viewport.update(width, height, true);
+    public void show() {
+        // play the bgm when the screen is shown
+        music.play();
     }
 
     private void input()
@@ -94,23 +85,23 @@ public class Main implements ApplicationListener {
         if(Gdx.input.isTouched())
         {
             touchPosition.set(Gdx.input.getX(), Gdx.input.getY());
-            viewport.unproject(touchPosition);
+            game.viewport.unproject(touchPosition);
             bucketSprite.setCenterX(touchPosition.x);
         }
     }
 
     private void logic()
     {
-        float worldWidth = viewport.getWorldWidth();
-        float worldHeight = viewport.getWorldHeight();
+        float delta = Gdx.graphics.getDeltaTime();
+
+        float worldWidth = game.viewport.getWorldWidth();
+        float worldHeight = game.viewport.getWorldHeight();
 
         float bucketWidth = bucketSprite.getWidth();
         float bucketHeight = bucketSprite.getHeight();
 
         bucketSprite.setX(MathUtils.clamp(bucketSprite.getX(), 0, worldWidth - bucketWidth));
         bucketRectangle.set(bucketSprite.getX(), bucketSprite.getY(), bucketWidth, bucketHeight);
-
-        float delta = Gdx.graphics.getDeltaTime();
 
         dropTimer += delta;
         if(dropTimer >= 1f)
@@ -132,6 +123,7 @@ public class Main implements ApplicationListener {
 
             if(bucketRectangle.overlaps(dropRectangle))
             {
+                dropsGathered++;
                 dropSprites.removeIndex(i);
                 dropSound.play();
             }
@@ -140,8 +132,8 @@ public class Main implements ApplicationListener {
 
     private void createDroplet()
     {
-        float worldWidth = viewport.getWorldWidth();
-        float worldHeight = viewport.getWorldHeight();
+        float worldWidth = game.viewport.getWorldWidth();
+        float worldHeight = game.viewport.getWorldHeight();
 
         float dropWidth = 1;
         float dropHeight = 1;
@@ -158,45 +150,63 @@ public class Main implements ApplicationListener {
     private void draw()
     {
         ScreenUtils.clear(Color.BLACK);
-        viewport.apply();
+        game.viewport.apply();
 
-        spriteBatch.setProjectionMatrix(viewport.getCamera().combined);
-        spriteBatch.begin();
+        game.batch.setProjectionMatrix(game.viewport.getCamera().combined);
+        game.batch.begin();
 
-        float worldWidth = viewport.getWorldWidth();
-        float worldHeight = viewport.getWorldHeight();
+        float worldWidth = game.viewport.getWorldWidth();
+        float worldHeight = game.viewport.getWorldHeight();
 
-        spriteBatch.draw(backgroundTexture, 0, 0, worldWidth, worldHeight);
-        bucketSprite.draw(spriteBatch);
+        game.batch.draw(backgroundTexture, 0, 0, worldWidth, worldHeight);
+        bucketSprite.draw(game.batch);
+
+        game.font.draw(game.batch, "drops collected: " + dropsGathered, 0, worldHeight);
 
         for(Sprite dropSprite : dropSprites)
         {
-            dropSprite.draw(spriteBatch);
+            dropSprite.draw(game.batch);
         }
 
-        spriteBatch.end();
+        game.batch.end();
     }
 
     @Override
-    public void render() {
-        // Draw your application here.
+    public void render(float delta) {
+
         input();
         logic();
         draw();
     }
 
     @Override
+    public void resize(int width, int height) {
+
+        game.viewport.update(width, height);
+    }
+
+    @Override
     public void pause() {
-        // Invoked when your application is paused.
+
     }
 
     @Override
     public void resume() {
-        // Invoked when your application is resumed after pause.
+
+    }
+
+    @Override
+    public void hide() {
+
     }
 
     @Override
     public void dispose() {
-        // Destroy application's resources here.
+
+        backgroundTexture.dispose();
+        bucketTexture.dispose();
+        dropTexture.dispose();
+        dropSound.dispose();
+        music.dispose();
     }
 }
