@@ -36,6 +36,7 @@ public class GameScreen implements Screen {
     Rectangle dropRectangle;
 
     int dropsGathered;
+    int lifeRemaining;
 
     public GameScreen(Drop game) {
 
@@ -59,6 +60,9 @@ public class GameScreen implements Screen {
 
         bucketRectangle = new Rectangle();
         dropRectangle = new Rectangle();
+
+        dropsGathered = 0;
+        lifeRemaining = 5;
     }
 
 
@@ -87,6 +91,12 @@ public class GameScreen implements Screen {
             touchPosition.set(Gdx.input.getX(), Gdx.input.getY());
             game.viewport.unproject(touchPosition);
             bucketSprite.setCenterX(touchPosition.x);
+        }
+
+        if(Gdx.input.isKeyPressed(Input.Keys.ESCAPE))
+        {
+            game.setScreen(new PauseScreen(game));
+            dispose();
         }
     }
 
@@ -119,7 +129,17 @@ public class GameScreen implements Screen {
             dropSprite.translateY(-3f * delta);
             dropRectangle.set(dropSprite.getX(), dropSprite.getY(), dropWidth, dropHeight);
 
-            if(dropSprite.getY() < - dropHeight) dropSprites.removeIndex(i);
+            if(dropSprite.getY() < - dropHeight)
+            {
+                lifeRemaining--;
+                dropSprites.removeIndex(i);
+            }
+
+            if(lifeRemaining <= 0)
+            {
+                game.setScreen(new GameOverScreen(game));
+                dispose();
+            }
 
             if(bucketRectangle.overlaps(dropRectangle))
             {
@@ -162,6 +182,7 @@ public class GameScreen implements Screen {
         bucketSprite.draw(game.batch);
 
         game.font.draw(game.batch, "drops collected: " + dropsGathered, 0, worldHeight);
+        game.font.draw(game.batch, "life remaining: " + lifeRemaining, 0, worldHeight - 2 * game.font.getCapHeight());
 
         for(Sprite dropSprite : dropSprites)
         {
