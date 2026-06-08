@@ -9,9 +9,11 @@ import com.badlogic.gdx.utils.ScreenUtils;
 public class PauseScreen implements Screen {
 
     final Drop game;
+    final GameScreen gameScreen;
 
-    public PauseScreen(Drop game) {
+    public PauseScreen(Drop game, GameScreen gameScreen) {
         this.game = game;
+        this.gameScreen = gameScreen;
     }
 
     @Override
@@ -21,9 +23,9 @@ public class PauseScreen implements Screen {
 
     private void input()
     {
-        if(Gdx.input.isTouched() || Gdx.input.isKeyPressed(Input.Keys.ESCAPE))
+        if(Gdx.input.isTouched() || Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE))
         {
-            game.setScreen(new GameScreen(game));
+            game.setScreen(gameScreen);
             dispose();
         }
     }

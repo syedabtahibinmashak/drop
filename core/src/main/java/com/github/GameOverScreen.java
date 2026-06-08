@@ -8,9 +8,11 @@ import com.badlogic.gdx.utils.ScreenUtils;
 public class GameOverScreen implements Screen {
 
     final Drop game;
+    final GameScreen gameScreen;
 
-    public GameOverScreen(Drop game) {
+    public GameOverScreen(Drop game, GameScreen gameScreen) {
         this.game = game;
+        this.gameScreen = gameScreen;
     }
 
     @Override
@@ -22,6 +24,7 @@ public class GameOverScreen implements Screen {
     {
         if(Gdx.input.isTouched())
         {
+            gameScreen.dispose();
             game.setScreen(new MainMenuScreen(game));
             dispose();
         }

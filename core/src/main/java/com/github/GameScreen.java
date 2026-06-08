@@ -93,10 +93,9 @@ public class GameScreen implements Screen {
             bucketSprite.setCenterX(touchPosition.x);
         }
 
-        if(Gdx.input.isKeyPressed(Input.Keys.ESCAPE))
+        if(Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE))
         {
-            game.setScreen(new PauseScreen(game));
-            dispose();
+            game.setScreen(new PauseScreen(game, this));
         }
     }
 
@@ -133,12 +132,12 @@ public class GameScreen implements Screen {
             {
                 lifeRemaining--;
                 dropSprites.removeIndex(i);
+                continue;
             }
 
             if(lifeRemaining <= 0)
             {
-                game.setScreen(new GameOverScreen(game));
-                dispose();
+                game.setScreen(new GameOverScreen(game, this));
             }
 
             if(bucketRectangle.overlaps(dropRectangle))
@@ -219,6 +218,7 @@ public class GameScreen implements Screen {
     @Override
     public void hide() {
 
+        music.pause();
     }
 
     @Override
